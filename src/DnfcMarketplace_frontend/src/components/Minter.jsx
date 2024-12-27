@@ -16,8 +16,10 @@ function Minter() {
   // handleSubmit is a function that is used to submit the form data.
 
   const [nftPrincipal, setNftPrincipal] = useState("")
+  const [loaderHidden, setLoaderHidden] = useState(true)
 
   async function onSubmit(data) {
+    setLoaderHidden(false)
     const name = data.name;
     const image = data.image[0];
 
@@ -30,6 +32,7 @@ function Minter() {
     const newNftId = await DnfcMarketplace_backend.mint(imageByteData, name)
     setNftPrincipal(newNftId.toText())
     console.log(newNftId.toText())
+    setLoaderHidden(true)
 
   }
 
@@ -37,6 +40,12 @@ function Minter() {
 
     return (
       <div className="minter-container">
+        <div hidden={loaderHidden} className="lds-ellipsis">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
         <h3 className="makeStyles-title-99 Typography-h3 form-Typography-gutterBottom">
           Create NFT
         </h3>

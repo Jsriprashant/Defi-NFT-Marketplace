@@ -2,9 +2,6 @@ import React from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
-import homeImage from "./assets/home-img.png";
-import Item from "./components/Item";
-import Minter from "./components/Minter";
 
 function App() {
   // const NFTID = "bw4dl-smaaa-aaaaa-qaacq-cai";
@@ -12,15 +9,11 @@ function App() {
   return (
     <div className="App">
       <Header />
-
-      <Minter />
-
+      {/* <Minter /> */}
       {/* <Item id={NFTID} /> */}
       {/* we need to pass the id of teh nft canister also so we fetched the id and pass to this item component as props */}
       {/* just crated this for testing */}
       {/* </Item> */}
-
-      {/* <img className="bottom-space" src={homeImage} /> */}
       <Footer />
     </div>
   );
