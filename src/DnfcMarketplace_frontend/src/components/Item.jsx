@@ -10,7 +10,7 @@ function Item(props) {
   const [ownerID, setOwnerID] = useState();
   const [image, setimage] = useState()
 
-  const id = Principal.fromText(props.id)
+  const id = props.id
   // now in order to use nft canister we have to use http to fetch the caninster in the icp blockchain (in case the app was live in blockchain)
   // to work locally we fetch it in local dfx
 
@@ -18,11 +18,13 @@ function Item(props) {
 
   // httpAgent helps to run http requests in order to get hold of canisters
   const agent = new HttpAgent({ host: localhost })
-  agent.fetchRootKey();
   // so we are creating a http agent that makes requests using host
   // as the mehods inside nft canister is async, so we create a funciton which fetches them asynchronously
 
   async function loadNft() {
+    await agent.fetchRootKey();
+
+    
     // now we create a actor with 
     // IdlFactory (Interface description Language) (and what it basically does is it gives our frontend a translated version of our Motoko backend so that our JavaScript will know which method can be called in our NFT canister. )
     // this idlFactory is present in nft.did.js in declarations
