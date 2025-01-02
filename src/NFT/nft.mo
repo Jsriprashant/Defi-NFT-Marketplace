@@ -20,9 +20,9 @@ actor class NFT(name : Text, owner : Principal, content : [Nat8]) = this {
     // owner's principal id, and the image data --> which is 8 bit natural number array
 
     //   now a nft has many properties
-    let itemName = name;
-    let ownerName : Principal = owner;
-    let imageBytes = content;
+    private let itemName = name;
+    private var ownerName : Principal = owner;
+    private let imageBytes = content;
 
     // so everytiem we programatically assign new canister it will have new principal Id
 
@@ -47,6 +47,19 @@ actor class NFT(name : Text, owner : Principal, content : [Nat8]) = this {
         // to get the principal id of the actor we are passing the "this" to the Principal.fromActor(this)
         // as this is referring to the current actor
 
-    }
+    };
+
+    public shared (msg) func transferOwnership(id : Principal) : async (Text) {
+        // first we are going to check if the owner is making the transfer or not
+        // we passed the id of the new owner(in this case the marketplace) to which the nft is being transferred
+        if (msg.caller == ownerName) {
+            ownerName := id;
+            return "success";
+        } else {
+            return "You are not the owner of this NFT";
+        }
+
+    };
+
 
 };

@@ -4,8 +4,16 @@ import NftActorClass "../NFT/nft";
 import Cycles "mo:base/ExperimentalCycles";
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
+import Bool "mo:base/Bool";
 
 actor nfcMarketplace {
+
+    private type Listing = {
+        itemOwner : Principal;
+        itemPrice : Nat;
+
+    };
+
     // as each nft will have a new, so we are using this main.mo only for
     //defining functionality of our marketplace
     // we have created a folder named NFC where we will create canisters
@@ -21,6 +29,12 @@ actor nfcMarketplace {
     var mapOfOwners = HashMap.HashMap<Principal, List.List<Principal>>(1, Principal.equal, Principal.hash);
     // this hashmap has the principal id of the owner and the List of principal id of the newly created nft canisters
     // as a user can have multiple nft's so we are using List.
+
+    var mapOfNftsForSale = HashMap.HashMap<Principal, Listing>(1, Principal.equal, Principal.hash);
+    //this hashmap has teh principal id of the nft canister as key that is for sale, and as value we need to store a bunch of things like price , owner of the nft , whan it was sold, etc, so we create a custom Dt for it
+
+    // so the user will upload the image, then set the price, and in the backend a new canister will be created
+    // then we are creating a hashmap with the principal id of the nft canister for hich price has been set and with user principal id and price
 
     public shared (msg) func mint(imageData : [Nat8], name : Text) : async (Principal) {
         //  so this is the function where the user will upload the image and the name of the image
@@ -88,6 +102,45 @@ actor nfcMarketplace {
             // so ownedNfts variable will have either an empty list or the list of principal id of the nft canisters
         };
         return List.toArray(userNfts);
+    };
+
+    public shared (msg) func NftListings(id : Principal, price : Nat) : async Text {
+        // first lets find the nft in the map of nf hashmap using the id passed in the function
+        var item : NftActorClass.NFT = switch (mapOfNfts.get(id)) {
+            case null return "Nft not found";
+            case (?result) result;
+        };
+
+        // now we need to check if the owner of the mft(through msg.caller) is same as the owner of the nft
+        // as we dont want others to list anybodyelse's nft
+
+        let owner = await item.getOwnerName();
+
+        if (Principal.equal(owner, msg.caller)) {
+            // if the owner of the nft is same as the caller of the function then we can list the nft
+            let newListingOfSale = {
+                itemOwner = owner;
+                itemPrice = price;
+            };
+
+            mapOfNftsForSale.put(id, newListingOfSale);
+
+            return "Sucess";
+        } else {
+            return "You are not the owner of this NFT";
+        };
+
+    };
+
+    public query func getDnfcMarketplaceId() : async (Principal) {
+        return Principal.fromActor(nfcMarketplace);
+    };
+    public query func isListed(id : Principal) : async (Bool) {
+        if (mapOfNftsForSale.get(id) == null) {
+            return false;
+        } else {
+            return true;
+        };
     };
 
 };
