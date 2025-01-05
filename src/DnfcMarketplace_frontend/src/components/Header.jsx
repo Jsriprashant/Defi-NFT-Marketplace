@@ -9,12 +9,19 @@ import CURRENT_USER_ID from "../main";
 
 function Header() {
   const [userGallery, setUserGallery] = useState(null);
+  const [userListedNfts, setUserListedNfts] = useState()
   const [loading, setLoading] = useState(true);
 
   async function getNfts() {
     try {
       const userNftIds = await DnfcMarketplace_backend.getListOfNfts(CURRENT_USER_ID);
       setUserGallery(userNftIds);
+
+      const nftsForSale = await DnfcMarketplace_backend.userListedNfts();
+      console.log("NFTs for sale:", nftsForSale);
+      setUserListedNfts(nftsForSale);
+
+
     } catch (error) {
       console.error("Failed to fetch NFTs:", error);
     } finally {
@@ -52,7 +59,20 @@ function Header() {
         </header>
         <Routes>
           <Route path="/" element={<img className="bottom-space" src={homeImage} alt="Home" />} />
-          <Route path="/discover" element={<h1>Will release this soon, Stay tuned!</h1>} />
+
+          <Route path="/discover" element={
+            loading ? (
+              <div className="lds-ellipsis">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            ) : (
+              <Gallery role="discover" title="Discover" ids={userListedNfts || []} />
+            )
+          } />
+
           <Route path="/minter" element={<Minter />} />
           <Route
             path="/collection"
@@ -65,7 +85,7 @@ function Header() {
                   <div></div>
                 </div>
               ) : (
-                <Gallery ids={userGallery || []} />
+                <Gallery role="collection" ids={userGallery || []} />
               )
             }
           />

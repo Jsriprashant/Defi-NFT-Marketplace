@@ -51,7 +51,7 @@ function Gallery(props) {
           <div className="disGrid-root disGrid-container disGrid-spacing-xs-5 disGrid-justify-content-xs-center">
             {props.ids && props.ids.length > 0 ? (
               props.ids.map((nftId) => (
-                <Item id={nftId} key={nftId.toText()} />
+                <Item id={nftId} key={nftId.toText()} role={props.role} />
               ))
             ) : (
               <h4>No NFTs to display!</h4>

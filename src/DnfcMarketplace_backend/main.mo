@@ -5,6 +5,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
 import Bool "mo:base/Bool";
+import Iter "mo:base/Iter";
 
 actor nfcMarketplace {
 
@@ -104,6 +105,11 @@ actor nfcMarketplace {
         return List.toArray(userNfts);
     };
 
+    public query func userListedNfts() : async ([Principal]) {
+        let ids = Iter.toArray(mapOfNftsForSale.keys());
+        return ids;
+    };
+
     public shared (msg) func NftListings(id : Principal, price : Nat) : async Text {
         // first lets find the nft in the map of nf hashmap using the id passed in the function
         var item : NftActorClass.NFT = switch (mapOfNfts.get(id)) {
@@ -141,6 +147,27 @@ actor nfcMarketplace {
         } else {
             return true;
         };
+    };
+
+    public query func getOriginalOwnerOfNft(id : Principal) : async (Principal) {
+
+        var listing : Listing = switch (mapOfNftsForSale.get(id)) {
+            case null return Principal.fromText("");
+            case (?result) result;
+        };
+
+        return listing.itemOwner;
+
+    };
+
+    public query func getNftListedPrice(id : Principal) : async (Nat) {
+
+        var listing : Listing = switch (mapOfNftsForSale.get(id)) {
+            case null return 0;
+            case (?result) result;
+        };
+
+        return listing.itemPrice;
     };
 
 };

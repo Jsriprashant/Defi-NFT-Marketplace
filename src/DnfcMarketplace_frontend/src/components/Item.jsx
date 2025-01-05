@@ -5,6 +5,8 @@ import { idlFactory } from "../../../declarations/nft";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { DnfcMarketplace_backend } from "../../../declarations/DnfcMarketplace_backend";
+import CURRENT_USER_ID from "../main";
+import PriceLabel from "./PriceLabel";
 
 
 function Item(props) {
@@ -17,6 +19,7 @@ function Item(props) {
   const [loaderHidden, setLoaderHidden] = useState(true)
   const [blurImg, setblurImg] = useState()
   const [sellStatus, setSellStatus] = useState()
+  const [sellPrice, setsellPrice] = useState();
 
   const id = props.id
   // now in order to use nft canister we have to use http to fetch the caninster in the icp blockchain (in case the app was live in blockchain)
@@ -63,16 +66,40 @@ function Item(props) {
     setimage(imageUrl)
 
     const isListeedResult = await DnfcMarketplace_backend.isListed(props.id);
-    if (isListeedResult) {
-      setblurImg({ filter: "blur(5px)" })
-      setOwnerID("Nft Marketplace")
-      setSellStatus("Listed")
+
+    if (props.role == "collection") {
+
+      if (isListeedResult) {
+        setblurImg({ filter: "blur(5px)" })
+        setOwnerID("Nft Marketplace")
+        setSellStatus("Listed")
+
+      }
+      else {
+
+        setButton(<Button handleClick={handleSell} text="Sell" />)
+      }
+    } else if (props.role == "discover") {
+      //now we are not allowing the user who sold the nft to buy it again
+      // so we need to perform the check again
+      const originalOwner = await DnfcMarketplace_backend.getOriginalOwnerOfNft(props.id)
+      // console.log("Original Owner Id",originalOwner.toText())
+      // console.log("Current User Id",CURRENT_USER_ID.toText())
+      const nftprice = await DnfcMarketplace_backend.getNftListedPrice(props.id);
+      setsellPrice(<PriceLabel pricetToSell={nftprice.toString()} />)
+      if (originalOwner.toText() != CURRENT_USER_ID.toText()) {
+        // if the original owner is not the current user then we can allow the user to buy the nft
+
+
+        setButton(<Button handleClick={handleBuy} text="Buy" />)
+
+
+
+      }
+
 
     }
-    else {
 
-      setButton(<Button handleClick={handleSell} text="Sell" />)
-    }
 
 
   }
@@ -80,7 +107,6 @@ function Item(props) {
   // this is the function that i am sending through props
   let price;
   function handleSell(params) {
-    console.log("Sell button clicked")
     setInputPrice(
       <input
         placeholder="Price in DANG"
@@ -134,6 +160,9 @@ function Item(props) {
 
   }
 
+  async function handleBuy(params) {
+    console.log("Buy button clicked")
+  }
 
   useEffect(() => {
     // now we need to call this loadNft actor only once, so we use this useEffct
@@ -156,9 +185,12 @@ function Item(props) {
           <div></div>
         </div>
         <div className="disCardContent-root">
+          {sellPrice}
+
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
             {name}<span className="purple-text"> -{sellStatus}</span>
           </h2>
+
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {ownerID}
           </p>
