@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.png";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/nft";
+import { idlFactory as tokenIdlFactory } from "../../../declarations/Dtoken_backend";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { DnfcMarketplace_backend } from "../../../declarations/DnfcMarketplace_backend";
@@ -20,6 +21,7 @@ function Item(props) {
   const [blurImg, setblurImg] = useState()
   const [sellStatus, setSellStatus] = useState()
   const [sellPrice, setsellPrice] = useState();
+  const [shouldDisplay, setShouldDisplay] = useState(true)
 
   const id = props.id
   // now in order to use nft canister we have to use http to fetch the caninster in the icp blockchain (in case the app was live in blockchain)
@@ -161,7 +163,39 @@ function Item(props) {
   }
 
   async function handleBuy(params) {
-    console.log("Buy button clicked")
+    setLoaderHidden(false)
+    console.log("Buy button clicked");
+
+    // now we are creating a actor with the idlFactory of Dtoken (Gta 6 project)
+    // we deployed the Dtoken project and we will ne using its transfer funciton to transfer the 
+    // GTA6 tokens to the seller from buyer's account
+    //This way we learn how to talk to dofferent canisters in the blockchain
+    const tokenActor = await Actor.createActor(tokenIdlFactory, {
+      agent,
+      canisterId: Principal.fromText("b77ix-eeaaa-aaaaa-qaada-cai"),
+      // the id is of the Dtoken_backend canister
+    });
+
+    // first lets get the seller's original id
+
+    const sellerId = await DnfcMarketplace_backend.getOriginalOwnerOfNft(props.id)
+    const itemPrice = await DnfcMarketplace_backend.getNftListedPrice(props.id)
+
+    //now lets use the tokenActor's transfer function
+
+    const result = await tokenActor.transfer(sellerId, itemPrice);
+    // once the amount is transferred, we need to transfer the ownership
+    if (result == "SUCCESS") {
+      const resultOfTransferOwnership = await DnfcMarketplace_backend.completePurchase(props.id, sellerId, CURRENT_USER_ID)
+      console.log("Purchase " + resultOfTransferOwnership)
+      setLoaderHidden(true)
+      setShouldDisplay(false);
+    }
+    else {
+      console.log("Insufficient Balance")
+      setLoaderHidden(true)
+    }
+
   }
 
   useEffect(() => {
@@ -171,7 +205,7 @@ function Item(props) {
 
 
   return (
-    <div className="disGrid-item">
+    <div style={{ display: shouldDisplay ? "inline" : "none" }} className="disGrid-item">
       <div className="disPaper-root disCard-root makeStyles-root-17 disPaper-elevation1 disPaper-rounded">
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"

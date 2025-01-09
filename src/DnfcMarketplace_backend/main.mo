@@ -170,4 +170,33 @@ actor nfcMarketplace {
         return listing.itemPrice;
     };
 
+    public shared (msg) func completePurchase(id : Principal, ownerId : Principal, newOwnerId : Principal) : async (Text) {
+        // this function takes in 3 args, one is the id of the nft canister, seller's id and the newOwner's id
+        // using the nftcanister's id lets get tha class
+        var purchasedNft : NftActorClass.NFT = switch (mapOfNfts.get(id)) {
+            case null return "Nft Does Not Exist ";
+            case (?result) result;
+        };
+
+        // noow lets transfer the ownership of the nft using the transferownership funciton pressent in teh nft actor
+
+        let transferResult = await purchasedNft.transferOwnership(newOwnerId);
+        if (transferResult == "success") {
+            // if the nft is transferred to its owner, we remove it from the map of listings for sale hashmap
+            mapOfNftsForSale.delete(id);
+
+            var ownedNfts : List.List<Principal> = switch (mapOfOwners.get(ownerId)) {
+                case null List.nil<Principal>();
+                case (?result) result;
+            };
+            ownedNfts := List.filter(ownedNfts, func(listItemId : Principal) : Bool { return listItemId != id });
+
+            addToOwnershipMap(newOwnerId, id);
+            return "Success";
+        } else {
+            return "Error";
+        }
+
+    };
+
 };
